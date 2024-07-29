@@ -1,68 +1,9 @@
 #!/usr/bin/env python3
 import modules.PySimpleGUI as sg
-import sqlite3
+
+from modules.dbInterface import loadImagelistFromDB, loadImageFromDB, saveImageToDB, deleteImageFromDB
 
 
-def loadImagelistFromDB():
-    try:
-        sqliteConnection = sqlite3.connect('data.sqlite')
-        cursor = sqliteConnection.cursor()
-        print("Connected to SQLite")
-        
-        sqlite_filenames_selection_query = """ SELECT filename FROM images """
-
-        cursor.execute(sqlite_filenames_selection_query)
-        rows = cursor.fetchall()        
-        cursor.close()
-        
-    except sqlite3.Error as error:
-        print("Failed to read data from sqlite table", error)
-    finally:
-        if sqliteConnection:
-            sqliteConnection.close()
-            print("the sqlite connection is closed") 
-            
-    return [r[0] for r in rows]
-    
-def loadImageFromDB(imageFileName):
-    try:
-        sqliteConnection = sqlite3.connect('data.sqlite')
-        cursor = sqliteConnection.cursor()
-        print("Connected to SQLite")
-        
-        sqlite_imagedata_selection_query = """ SELECT imagedata FROM images WHERE filename=(?)"""
-
-        cursor.execute(sqlite_imagedata_selection_query,(imageFileName))
-        imageData = cursor.fetchone()        
-        cursor.close()
-        
-    except sqlite3.Error as error:
-        print("Failed to read image data from sqlite table", error)
-    finally:
-        if sqliteConnection:
-            sqliteConnection.close()
-            print("the sqlite connection is closed") 
-    return imageData
-    
-
-def deleteImageFromDB(imageFileName):
-    try:
-        sqliteConnection = sqlite3.connect('data.sqlite')
-        cursor = sqliteConnection.cursor()
-        print("Connected to SQLite")
-        
-        sqlite_imagedata_delete_query = """ DELETE FROM images WHERE filename=:filename;"""
-
-        cursor.execute(sqlite_imagedata_delete_query,{"filename":imageFileName})
-        sqliteConnection.commit()
-        cursor.close()
-        print(f"Deleting {imageFileName}")
-    except sqlite3.Error as error:
-        print("Failed to delete image data from sqlite table", error)
-    finally:
-        if sqliteConnection:
-            sqliteConnection.close()
-            print("the sqlite connection is closed") 
 
     
 #Load database
@@ -70,7 +11,7 @@ imagelist=loadImagelistFromDB()
 
 layout = [
     [sg.Image(size = (500,300), key = 'image')], [sg.Listbox(imagelist,size = (100,25),enable_events=True,key ='image_list')],
-    [sg.Button("Delete", key = "delete_image")]
+    [sg.Button("Delete", key = "delete_image")],[sg.Button("Add", key = "add_image")],
     ]
     
 window = sg.Window('Viewer', layout)
@@ -90,6 +31,14 @@ while True:
        
         window['image'].update(data=imageData[0],subsample=3)
         #TODO updte canvas with imageData
+        
+     if event == 'add_image':
+        imageFilename = sg.popup_get_file(" ",no_window=True, file_types=(('Images', '.png'),('Images', '.jpg')))   
+        if not imageFilename:
+           continue
+        saveImageToDB(imageFilename)
+        imagelist=loadImagelistFromDB()
+        window["image_list"].update(imagelist) 
         
      if event == "delete_image":
         if sg.popup_yes_no("Are you sure you want to delete this image?") == "Yes":
