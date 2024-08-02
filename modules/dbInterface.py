@@ -92,3 +92,38 @@ def deleteImageFromDB(imageFileName):
         if sqliteConnection:
             sqliteConnection.close()
             print("the sqlite connection is closed") 
+            
+
+def getImageId(cursor, imageFileName):
+     cursor.execute(""" SELECT id FROM images WHERE filename=:filename""",{"filename":imageFileName})
+     imageID = cursor.fetchone()  
+     return imageID[0]
+            
+            
+def addImageNoteToDB(imageName, imageNote):
+    try:
+        sqliteConnection = sqlite3.connect('data.sqlite')
+        cursor = sqliteConnection.cursor()
+        print("Connected to SQLite")
+        
+        imageID = getImageId(cursor, imageName[0])
+        print(f"From image {imageName[0]} got image ID {imageID}")
+        sqlite_insert_image_note_query = """ INSERT INTO imagenotes
+                                  (note,image_ref) VALUES (?, ?)"""
+        cursor.execute(sqlite_insert_image_note_query, (imageNote,imageID))
+        sqliteConnection.commit()
+        cursor.close()
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+            print("the sqlite connection is closed")
+               
+            
+            
+            
+            
+            
+            
+            
+            
+            

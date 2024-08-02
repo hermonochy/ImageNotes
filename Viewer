@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 import modules.PySimpleGUI as sg
 
-from modules.dbInterface import loadImagelistFromDB, loadImageFromDB, saveImageToDB, deleteImageFromDB
+from modules.dbInterface import loadImagelistFromDB, loadImageFromDB, saveImageToDB, deleteImageFromDB, addImageNoteToDB
 
 
 
     
 #Load database
 imagelist=loadImagelistFromDB()
+noteslist=[]
 
 layout = [
-    [sg.Image(size = (500,300), key = 'image')], [sg.Listbox(imagelist,size = (100,25),enable_events=True,key ='image_list')],
-    [sg.Button("Delete", key = "delete_image")],[sg.Button("Add", key = "add_image")],
+    [sg.Image(size = (500,300), key = 'image')], [sg.Listbox(imagelist,size = (100,15),enable_events=True,key ='image_list')],
+    [sg.Button("Delete image", key = "delete_image")],[sg.Button("Add image", key = "add_image")],
+    [sg.Listbox(noteslist,size = (100,5),enable_events=True,key ='notes_list')],
+    [sg.Button("Delete note", key = "delete_note")],[sg.Button("Add note", key = "add_note")],
     ]
     
 window = sg.Window('Viewer', layout)
@@ -52,4 +55,12 @@ while True:
             window["image_list"].update(imagelist) 
             window["image"].update()                         
         
+        
+     # if event == "notes_list"
+     
+     if event == "add_note":
+        newNote = sg.popup_get_text("Edit new image note")
+        print(newNote)
+        if newNote is not None:
+           addImageNoteToDB(values['image_list'], newNote)
         
